@@ -1,0 +1,319 @@
+openapi: 3.0.3
+info:
+  title: Scheduler API
+  version: 1.0.0
+tags:
+  - name: Schedule
+  - name: User
+paths:
+  /schedules/create/days-in-week:
+    post:
+      tags:
+        - Schedule
+      summary: Create weekday-based schedule
+      description:
+        "Creates schedule containing weekdays, with day 1 starting at Monday.
+        <br/><br/> Note: When using this schedule, dummy intervals are created.
+        By converting to a date, you can extract relevant information."
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ScheduleParamsCreate"
+                - type: object
+                  required: [days]
+                  properties:
+                    days:
+                      type: array
+                      items:
+                        type: number
+                      example: [1, 5, 7]
+      responses:
+        "200":
+          $ref: "#/components/responses/ScheduleCreation"
+
+  /schedules/create/selected-dates:
+    post:
+      tags:
+        - Schedule
+      summary: Create date-based schedule
+      description: "Creates schedule from multiple dates. Dates are defined by
+        converting the given unix timestamp (ms) to the timezone, and then taking
+        the date."
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ScheduleParamsCreate"
+                - type: object
+                  required: [dates]
+                  properties:
+                    dates:
+                      type: array
+                      items:
+                        type: number
+                      example: [800000000, 900000000]
+      responses:
+        "200":
+          $ref: "#/components/responses/ScheduleCreation"
+
+  /schedules/common-availabilities:
+    get:
+      tags:
+        - Schedule
+      summary: Get common availabilities in schedule
+      description:
+        "Find all time intervals with unique combinations of availabilities.
+        If sorted by best, sort results by number of availabilities."
+
+      parameters:
+        - name: scheduleUUID
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/uuid"
+        - name: sortByBest
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    [interval, numIntersection, usersIntersecting, preference]
+                  properties:
+                    interval:
+                      $ref: "#/components/schemas/interval"
+                    numIntersection:
+                      type: number
+                      example: 2
+                    usersIntersecting:
+                      type: array
+                      items:
+                        type: string
+                      example: [John, Bob]
+                    preference:
+                      type: object
+                      additionalProperties:
+                        type: array
+                        items:
+                          type: string
+                      example: { 1: [], 2: ["John", "Bob"] }
+
+  /schedules/info:
+    get:
+      tags:
+        - Schedule
+      summary: Schedule Information
+      description: Get information about the schedule.
+
+      parameters:
+        - name: scheduleUUID
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/uuid"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  [
+                    schedule_name,
+                    type,
+                    allowable_time_range,
+                    timezone,
+                    user_availabilities,
+                  ]
+                properties:
+                  schedule_name:
+                    $ref: "#/components/schemas/scheduleName"
+                  type:
+                    type: string
+                    enum: [SELECTEDDATES, DAYSINWEEK]
+                  allowable_time_range:
+                    $ref: "#/components/schemas/intervalArray"
+                  timezone:
+                    $ref: "#/components/schemas/timezone"
+                  user_availabilities:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/preferenceInterval"
+                    example: { John: [{ start: 0, end: 10, preference: 1 }] }
+
+  /users/login:
+    post:
+      tags:
+        - User
+      summary: Login into the schedule
+      description: Login or create a new account for the schedule.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, scheduleUUID, password]
+              properties:
+                name:
+                  type: string
+                  example: John
+                scheduleUUID:
+                  $ref: "#/components/schemas/uuid"
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token]
+                properties:
+                  token:
+                    $ref: "#/components/schemas/uuid"
+
+  /users/add-availabilities:
+    put:
+      tags:
+        - User
+      summary: Add user availabilities into schedule
+      description:
+        "Add availabilities into the schedule. If added availabilities
+        overlap, the lowest preference is taken. <br/><br/> Note: For weekday-based
+        schedules,the availability is taken relative from the start of week in UTC."
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scheduleUUID, availabilities]
+              properties:
+                scheduleUUID:
+                  $ref: "#/components/schemas/uuid"
+                availabilities:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/preferenceInterval"
+      responses:
+        "200":
+          description: Successful operation
+
+  /users/remove-availabilities:
+    post:
+      tags:
+        - User
+      summary: Remove user availabilities from schedule
+      description:
+        "Remove availabilities from the schedule. Intervals can include times with
+        no user availabilities. <br/><br/> Note: For weekday-based schedules,
+        the availability is taken relative from the start of week in UTC."
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scheduleUUID, availabilities]
+              properties:
+                scheduleUUID:
+                  $ref: "#/components/schemas/uuid"
+                availabilities:
+                  $ref: "#/components/schemas/intervalArray"
+      responses:
+        "200":
+          description: Successful operation
+
+components:
+  schemas:
+    ScheduleParamsCreate:
+      type: object
+      required: [name, timezone]
+      properties:
+        name:
+          $ref: "#/components/schemas/scheduleName"
+        timezone:
+          $ref: "#/components/schemas/timezone"
+        earliestHour:
+          type: number
+          example: 3
+        latestHour:
+          type: number
+          example: 22
+
+    scheduleName:
+      type: string
+      example: My Schedule
+
+    timezone:
+      type: string
+      example: America/Dawson
+
+    uuid:
+      type: string
+      example: 4fab5978-ff5a-40bf-8f45-9029ccfeb3b8
+
+    interval:
+      type: object
+      required: [start, end]
+      properties:
+        start:
+          type: number
+        end:
+          type: number
+      example: { start: 0, end: 10 }
+
+    intervalArray:
+      type: array
+      items:
+        $ref: "#/components/schemas/interval"
+
+    preference:
+      type: integer
+      example: 1
+
+    preferenceInterval:
+      allOf:
+        - $ref: "#/components/schemas/interval"
+        - type: object
+          required: [preference]
+          properties:
+            preference:
+              $ref: "#/components/schemas/preference"
+      example: { start: 0, end: 1000, preference: 1 }
+
+  responses:
+    ScheduleCreation:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [uuid]
+            properties:
+              uuid:
+                $ref: "#/components/schemas/uuid"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: token received from user login

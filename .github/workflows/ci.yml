@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: build
+      cancel-in-progress: true
+    env:
+      CLEAR_PERM: ${{ secrets.CLEAR_PERM }}
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 21
+      - run: npm ci
+      - run: npm run tsc
+      - run: npm run lint
+      - run: npm run prettier-check
+      - run: npm test
