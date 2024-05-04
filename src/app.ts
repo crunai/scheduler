@@ -2,6 +2,7 @@ import express from "express";
 import schedules from "./routes/schedules/router";
 import users from "./routes/users/router";
 import admin from "./routes/admin/router";
+import health from "./routes/health/router";
 import { errorHandler } from "./middleware/error";
 import { logger } from "./middleware/logger";
 import "dotenv/config";
@@ -17,6 +18,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(logger);
 }
 
+app.use("/", health);
 app.use("/users", users);
 app.use("/schedules", schedules);
 app.use("/admin", admin);
