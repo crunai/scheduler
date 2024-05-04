@@ -2,13 +2,11 @@
 
 A simple group scheduling API that supports preferences.
 
-Deployed at https://api-scheduler.koyeb.app.
+Deployed at https://scheduler-api-l65q.onrender.com.
 
 ## API Documentation
 
-API documented in [Swagger](/swagger.yaml).
-
-View [swagger rendering](https://api-scheduler.koyeb.app/api-docs).
+View swagger API documentation at https://scheduler-api-l65q.onrender.com/api-docs.
 
 ## Local Setup
 
