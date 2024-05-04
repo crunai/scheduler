@@ -1,4 +1,4 @@
-import { setupTests } from "../testHelper";
+import { createDummyPreferenceHelperInterval, setupTests } from "../testHelper";
 import {
   addAvailabilities,
   login,
@@ -135,5 +135,27 @@ describe("addAvailabilities route", () => {
       },
     ]);
     expect(res.status).toStrictEqual(400);
+  });
+
+  test("Merging availabilities", async () => {
+    const uuid = (await scheduleSelectedDates("golf", "UTC", [0, 1])).body.uuid;
+    const token = (await login("john", uuid, "password")).body.token;
+
+    let res = await addAvailabilities(token, uuid, [
+      createDummyPreferenceHelperInterval(
+        11,
+        15,
+        undefined,
+        undefined,
+        PreferenceType.NOTPREFERRED,
+      ),
+      createDummyPreferenceHelperInterval(13, 17),
+    ]);
+    expect(res.status).toStrictEqual(200);
+
+    res = await addAvailabilities(token, uuid, [
+      createDummyPreferenceHelperInterval(16, 18),
+    ]);
+    expect(res.status).toStrictEqual(200);
   });
 });

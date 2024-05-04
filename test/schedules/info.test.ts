@@ -73,4 +73,9 @@ describe("schedule info route", () => {
       },
     });
   });
+
+  test("schedule is not valid", async () => {
+    const res = await info("uuid");
+    expect(res.status).toStrictEqual(400);
+  });
 });
