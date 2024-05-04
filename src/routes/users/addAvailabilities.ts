@@ -72,9 +72,8 @@ export const addAvailabilities = async (req: Request, res: Response) => {
       .send("Intervals provided are not within the schedule allowable time");
   }
 
-  let resultingAvailabilities = givenMergedAvailabilities;
   const userAvailabilities = schedule.user_availabilities.get(username)!;
-  resultingAvailabilities = preferenceIntervalMerge(
+  const resultingAvailabilities = preferenceIntervalMerge(
     givenMergedAvailabilities.concat(
       userAvailabilities.map(convertPreferenceMillisToIntervalObject),
     ),
