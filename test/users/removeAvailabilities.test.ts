@@ -115,4 +115,31 @@ describe("removeAvailabilities route", () => {
     ]);
     expect(res.status).toStrictEqual(200);
   });
+
+  test("Invalid token and schedule", async () => {
+    const res = await removeAvailabilities("token", "uuid", [
+      createDummyPreferenceHelperInterval(12, 15),
+    ]);
+    expect(res.status).toStrictEqual(400);
+  });
+
+  test("Invalid token", async () => {
+    const uuid = (await scheduleDaysInWeek("weekend", "UTC", [1])).body.uuid;
+    const res = await removeAvailabilities("", uuid, [
+      createDummyPreferenceHelperInterval(12, 15),
+    ]);
+    expect(res.status).toStrictEqual(401);
+  });
+
+  test("Start and end is same", async () => {
+    const uuid = (await scheduleDaysInWeek("weekend", "UTC", [1])).body.uuid;
+    const token = (await login("john", uuid, "password")).body.token;
+    const res = await removeAvailabilities(token, uuid, [
+      {
+        start: 0,
+        end: 0,
+      },
+    ]);
+    expect(res.status).toStrictEqual(400);
+  });
 });

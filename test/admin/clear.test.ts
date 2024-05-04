@@ -9,8 +9,13 @@ describe("Clear route", () => {
     expect(res.status).toStrictEqual(200);
   });
 
-  test("Unauthorised", async () => {
+  test("Wrong format", async () => {
     const res = await clear("");
     expect(res.status).toStrictEqual(401);
+  });
+
+  test("Unauthorised", async () => {
+    const res = await clear("test");
+    expect(res.status).toStrictEqual(403);
   });
 });

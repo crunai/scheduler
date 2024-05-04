@@ -132,4 +132,9 @@ describe("get common availabilities route", () => {
       createDummyIntervalInfo(23, 24, ["John"], 1),
     ]);
   });
+
+  test("schedule is not valid", async () => {
+    const res = await getCommonAvailabilities("uuid");
+    expect(res.status).toStrictEqual(400);
+  });
 });

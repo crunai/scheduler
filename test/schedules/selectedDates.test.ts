@@ -29,4 +29,14 @@ describe("selectedDates Scheduling route", () => {
     ]);
     expect(res.status).toStrictEqual(200);
   });
+
+  test("Invalid tz", async () => {
+    const res = await scheduleSelectedDates("Schedule", "Ocean", [0]);
+    expect(res.status).toStrictEqual(400);
+  });
+
+  test("No timestamp", async () => {
+    const res = await scheduleSelectedDates("golf", "Antarctica/Vostok", []);
+    expect(res.status).toStrictEqual(400);
+  });
 });
