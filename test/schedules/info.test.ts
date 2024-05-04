@@ -11,6 +11,7 @@ import {
   scheduleSelectedDates,
 } from "../routeWrapper";
 import { ScheduleType } from "../../src/database";
+import { DateTime } from "luxon";
 
 describe("schedule info route", () => {
   setupTests();
@@ -26,6 +27,29 @@ describe("schedule info route", () => {
       timezone: "UTC",
       user_availabilities: {},
     });
+  });
+
+  test("Creation handles timezone", async () => {
+    const date = new Date("Apr 06 2024 06:00:00 UTC/GMT");
+    const uuid = (
+      await scheduleSelectedDates("Schedule", "America/Dawson", [
+        date.getTime(),
+      ])
+    ).body.uuid;
+    const res = await info(uuid);
+    expect(res.body.allowable_time_range).toStrictEqual([
+      {
+        start: DateTime.fromJSDate(date)
+          .setZone("America/Dawson")
+          .startOf("day")
+          .toMillis(),
+        end:
+          DateTime.fromJSDate(date)
+            .setZone("America/Dawson")
+            .endOf("day")
+            .toMillis() + 1,
+      },
+    ]);
   });
 
   test("Days in Week", async () => {
