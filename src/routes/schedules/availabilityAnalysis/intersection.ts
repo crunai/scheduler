@@ -109,7 +109,7 @@ const getAllIntersectionInfo = (schedule: Schedule) => {
               new Set([username]),
             );
           } else if (currentIntersection.interval.engulfs(overhang)) {
-            usersIntersecting = currentIntersection.usersIntersecting;
+            usersIntersecting = new Set(currentIntersection.usersIntersecting);
             preference = getCopy(currentIntersection.preference);
           }
           stack.push({
