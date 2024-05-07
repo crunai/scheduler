@@ -1,4 +1,5 @@
 {
+  "name": "scheduler",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "test": "jest --coverage --collectCoverageFrom='src/**/*.ts'",
