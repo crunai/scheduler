@@ -10,9 +10,12 @@ import swaggerUi from "swagger-ui-express";
 import fs from "fs";
 import YAML from "yaml";
 import { limiter } from "./middleware/rateLimiter";
+import cors from "cors";
 
 export const app = express();
 app.use(express.json());
+app.use(cors());
+
 if (process.env.NODE_ENV === "production") {
   app.use(limiter);
   app.use(logger);
